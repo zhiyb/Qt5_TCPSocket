@@ -14,7 +14,6 @@ signals:
 
 public slots:
 	void start(void);
-	void finish(void);
 
 private:
 	QFile *fin, *fout;

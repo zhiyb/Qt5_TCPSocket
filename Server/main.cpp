@@ -13,8 +13,11 @@ int main(int argc, char *argv[])
 	InputHandle ih(&n);
 	ih.moveToThread(&inputHandleThread);
 	QObject::connect(&inputHandleThread, SIGNAL(started()), &ih, SLOT(start()));
-	QObject::connect(&inputHandleThread, SIGNAL(finished()), &ih, SLOT(finish()));
 	inputHandleThread.start();
 
-	return a.exec();
+	int ret = a.exec();
+	inputHandleThread.quit();
+	inputHandleThread.wait();
+
+	return ret;
 }

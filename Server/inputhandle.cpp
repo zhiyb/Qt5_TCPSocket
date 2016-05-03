@@ -21,7 +21,6 @@ loop:
 	if (input.isNull())
 		goto loop;
 	if (input == "stop") {
-		QThread::currentThread()->quit();
 		qApp->quit();
 		return;
 	} else if (input == "state") {
@@ -32,5 +31,3 @@ loop:
 	}
 	goto loop;
 }
-
-void InputHandle::finish(void) {}

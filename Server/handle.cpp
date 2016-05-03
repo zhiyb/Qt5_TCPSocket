@@ -2,27 +2,26 @@
 #include <QThread>
 #include <QDebug>
 
-Handle::Handle(QTcpSocket *s, QObject *parent) :
-	QObject(parent), socket(s)
+void Handle::start()
 {
+	bytesAvailable = 0;
+	timerID = 0;
 	connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
 	connect(socket, SIGNAL(readyRead()), this, SLOT(read()));
 	qDebug() << "[HANDLE]" << QThread::currentThread() << "New connection";
 }
 
-void Handle::disconnected(void)
+void Handle::timerEvent(QTimerEvent *)
 {
-	qDebug() << "[HANDLE]" << QThread::currentThread() << "Disconnected";
-	QThread::currentThread()->quit();
-}
+	qint64 bytes = bytesAvailable;
+	bytesAvailable = socket->bytesAvailable();
+	if (bytesAvailable != bytes) {
+		bytesAvailable = bytes;
+		return;
+	}
+	killTimer(timerID);
+	timerID = 0;
 
-void Handle::read(void)
-{
-	qint64 size;
-	do {
-		size = socket->bytesAvailable();
-		QThread::currentThread()->msleep(10);
-	} while (size != socket->bytesAvailable());
 	QJsonDocument doc = QJsonDocument::fromBinaryData(socket->readAll());
 	if (doc.isNull()) {
 		qDebug() << "[HANDLE]" << QThread::currentThread() << "Invalid JSON received!";
@@ -30,4 +29,17 @@ void Handle::read(void)
 	}
 	qDebug() << "[DEBUG]" << QThread::currentThread() << "JSON received:" << doc;
 	emit JSONReceived(doc);
+}
+
+void Handle::disconnected()
+{
+	qDebug() << "[HANDLE]" << QThread::currentThread() << "Disconnected";
+	delete socket;
+	emit finished(QThread::currentThread());
+}
+
+void Handle::read()
+{
+	if (!timerID)
+		timerID = startTimer(10);
 }

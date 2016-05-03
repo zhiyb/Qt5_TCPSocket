@@ -20,9 +20,11 @@ public slots:
 
 private slots:
 	void newConnection(void);
+	void join(QThread *thread);
 
 private:
 	QTcpServer *server;
+	QList<QThread *> threadPool;
 };
 
 #endif // NETWORK_H
