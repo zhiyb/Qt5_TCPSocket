@@ -12,11 +12,11 @@ public:
 
 signals:
 	void connectTo(QString ip, QString port);
+	void disconnect();
 	void send(QString string);
 
 public slots:
 	void start(void);
-	void finish(void);
 
 private:
 	QFile *fin, *fout;

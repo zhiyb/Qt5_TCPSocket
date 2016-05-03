@@ -13,6 +13,7 @@ InputHandle::InputHandle(Network *n, QObject *parent) :
 	fout->open(stdout, QIODevice::WriteOnly);
 	sout.setDevice(fout);
 	connect(this, SIGNAL(connectTo(QString,QString)), network, SLOT(connectTo(QString,QString)));
+	connect(this, SIGNAL(disconnect()), network, SLOT(disconnect()));
 	connect(this, SIGNAL(send(QString)), network, SLOT(send(QString)));
 }
 
@@ -25,7 +26,6 @@ loop:
 		return;
 	QString cmd = input.at(0);
 	if (cmd == "stop") {
-		QThread::currentThread()->quit();
 		qApp->quit();
 		return;
 	} else if (cmd == "connect") {
@@ -41,7 +41,7 @@ loop:
 		else
 			emit connectTo(host, port);
 	} else if (cmd == "disconnect") {
-		network->socket->disconnectFromHost();
+		emit disconnect();
 	} else if (cmd == "send") {
 		if (input.size() != 2) {
 			sout << "[CMD] You need to specify the data!\n";
@@ -56,5 +56,3 @@ loop:
 		sout << (network->socket->state()) << '\n';
 	goto loop;
 }
-
-void InputHandle::finish(void) {}

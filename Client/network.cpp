@@ -29,7 +29,13 @@ void Network::disconnected(void)
 
 void Network::connectTo(QString ip, QString port)
 {
-	socket->connectToHost(QHostAddress(ip), port.toInt());
+	//socket->connectToHost(QHostAddress(ip), port.toInt());
+	socket->connectToHost(ip, port.toInt());
+}
+
+void Network::disconnect()
+{
+	socket->disconnectFromHost();
 }
 
 void Network::send(QString string)
@@ -43,5 +49,5 @@ void Network::send(QString string)
 
 void Network::send(QJsonDocument doc)
 {
-	socket->write(doc.toBinaryData());
+	socket->write(doc.toJson());
 }

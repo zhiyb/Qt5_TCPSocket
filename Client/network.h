@@ -19,6 +19,7 @@ signals:
 
 public slots:
 	void connectTo(QString ip, QString port);
+	void disconnect();
 	void send(QString string);
 	void send(QJsonDocument doc);
 
