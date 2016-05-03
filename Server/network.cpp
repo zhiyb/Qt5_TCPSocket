@@ -20,6 +20,8 @@ Network::~Network(void)
 	foreach (QThread *thread, threadPool) {
 		thread->quit();
 		thread->wait();
+		qDebug() << "[HANDLE]" << thread << "Deleted";
+		delete thread;
 	}
 }
 
@@ -27,7 +29,10 @@ void Network::newConnection(void)
 {
 	QThread *handleThread = new QThread(this);
 	threadPool.append(handleThread);
-	Handle *handle = new Handle(server->nextPendingConnection(), handleThread);
+	QTcpSocket *socket = server->nextPendingConnection();
+	connect(handleThread, SIGNAL(finished()), socket, SLOT(deleteLater()));
+	Handle *handle = new Handle(socket);
+	connect(handleThread, SIGNAL(started()), handle, SLOT(start()));
 	connect(handleThread, SIGNAL(finished()), handle, SLOT(deleteLater()));
 	connect(handle, SIGNAL(finished(QThread*)), this, SLOT(join(QThread*)));
 	handle->moveToThread(handleThread);
@@ -39,5 +44,6 @@ void Network::join(QThread *thread)
 	thread->quit();
 	thread->wait();
 	threadPool.removeAll(thread);
+	qDebug() << "[HANDLE]" << thread << "Deleted";
 	delete thread;
 }

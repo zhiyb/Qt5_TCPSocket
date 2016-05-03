@@ -5,7 +5,7 @@
 void Handle::start()
 {
 	bytesAvailable = 0;
-	timerID = 0;
+	timerID = startTimer(10);
 	connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
 	connect(socket, SIGNAL(readyRead()), this, SLOT(read()));
 	qDebug() << "[HANDLE]" << QThread::currentThread() << "New connection";
@@ -15,16 +15,19 @@ void Handle::timerEvent(QTimerEvent *)
 {
 	qint64 bytes = bytesAvailable;
 	bytesAvailable = socket->bytesAvailable();
-	if (bytesAvailable != bytes) {
-		bytesAvailable = bytes;
+	//qDebug() << __func__ << timerID << bytes << bytesAvailable;
+	if (bytesAvailable != bytes)
 		return;
-	}
 	killTimer(timerID);
 	timerID = 0;
+	if (bytesAvailable == 0)
+		return;
+	bytesAvailable = 0;
 
-	QJsonDocument doc = QJsonDocument::fromBinaryData(socket->readAll());
+	QByteArray data = socket->readAll();
+	QJsonDocument doc = QJsonDocument::fromJson(data);
 	if (doc.isNull()) {
-		qDebug() << "[HANDLE]" << QThread::currentThread() << "Invalid JSON received!";
+		qDebug() << "[HANDLE]" << QThread::currentThread() << "Invalid JSON received!" << data;
 		return;
 	}
 	qDebug() << "[DEBUG]" << QThread::currentThread() << "JSON received:" << doc;
@@ -34,7 +37,6 @@ void Handle::timerEvent(QTimerEvent *)
 void Handle::disconnected()
 {
 	qDebug() << "[HANDLE]" << QThread::currentThread() << "Disconnected";
-	delete socket;
 	emit finished(QThread::currentThread());
 }
 
